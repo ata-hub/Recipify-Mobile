@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <ImageView
+        android:id="@+id/recipeImageView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder_image"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"/>
+
+    <TextView
+        android:id="@+id/recipeNameTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/recipeImageView"
+        android:layout_marginTop="16dp"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:gravity="center"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/timeRelativeLayout"
+        android:orientation="horizontal"
+        android:layout_below="@id/recipeNameTextView"
+        android:layout_marginStart="8dp">
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="16sp"
+            android:text="Time: "
+            android:textColor="@android:color/black"/>
+        <TextView
+            android:id="@+id/recipeTimeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:layout_toEndOf="@id/timeText"
+            android:layout_marginStart="8dp"
+            android:layout_alignBaseline="@id/timeText"/>
+    </RelativeLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/timeRelativeLayout"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp"
+        android:id="@+id/ingredientTitle"
+        android:text="Ingredients:"
+        android:layout_marginStart="8dp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"/>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recipeIngredientsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ingredientTitle"
+        android:layout_marginTop="8dp"
+        android:nestedScrollingEnabled="false"
+        android:padding="5dp"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/recipeIngredientsRecyclerView"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp"
+        android:id="@+id/descriptionTitle"
+        android:text="Instructions:"
+        android:layout_marginStart="8dp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/recipeDescriptionTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/descriptionTitle"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp"
+        android:layout_marginStart="8dp"
+        android:textColor="@android:color/black"/>
+
+    <!-- Add more TextViews or other UI elements for displaying other attributes -->
+
+</RelativeLayout>
+</androidx.core.widget.NestedScrollView>
