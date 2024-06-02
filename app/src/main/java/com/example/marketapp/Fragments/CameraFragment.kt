@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.marketapp.Fragments.LoadingDialogFragment
+import com.example.marketapp.Fragments.NoRecipesFoundFragment
 import com.example.marketapp.Fragments.RecipeResultFragment
 import com.example.marketapp.Interfaces.BackendService
 import com.example.marketapp.Models.Recipe
@@ -48,6 +49,7 @@ class CameraFragment : Fragment() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val imageBitmap = result.data?.extras?.get("data") as Bitmap
                 binding.capturedImage.setImageBitmap(imageBitmap)
+                updateFindRecipesButtonVisibility()
             }
         }
 
@@ -59,6 +61,7 @@ class CameraFragment : Fragment() {
                     try {
                         val imageBitmap = MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
                         binding.capturedImage.setImageBitmap(imageBitmap)
+                        updateFindRecipesButtonVisibility()
                     } catch (e: IOException) {
                         e.printStackTrace()
                     }
@@ -103,6 +106,11 @@ class CameraFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Set OnClickListener to the back button
+        binding.backButton.setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack()
+        }
 
         binding.buttonOpenCamera.setOnClickListener {
             checkCameraPermissionAndOpenCamera()
@@ -187,16 +195,21 @@ class CameraFragment : Fragment() {
                     recipesFromBackend?.forEach { recipe ->
                         Log.i("backend", "Recipe: ${recipe.toString()}")
                     }
-                    val fragmentManager = requireActivity().supportFragmentManager
-                    val recipeListFragment = recipesFromBackend?.let { RecipeResultFragment.newInstance(it) }
-                    if (recipeListFragment != null) {
-                        fragmentManager.beginTransaction()
-                            .replace(R.id.frameLayout, recipeListFragment)
-                            .addToBackStack(null)
-                            .commit()
+                    if (recipesFromBackend.isNullOrEmpty()) {
+                        showNoRecipesFoundFragment()
+                    } else {
+                        val fragmentManager = requireActivity().supportFragmentManager
+                        val recipeListFragment = recipesFromBackend?.let { RecipeResultFragment.newInstance(it) }
+                        if (recipeListFragment != null) {
+                            fragmentManager.beginTransaction()
+                                .replace(R.id.frameLayout, recipeListFragment)
+                                .addToBackStack(null)
+                                .commit()
+                        }
                     }
                 } else {
                     Log.e("backend", "Backend call failed with response code: ${response.code()} and message: ${response.message()}")
+                    showNoRecipesFoundFragment()
                 }
             }
 
@@ -205,8 +218,18 @@ class CameraFragment : Fragment() {
                 loadingDialog?.dismiss()
 
                 Log.e("backend", "Backend call failed: ${t.message}")
+                showNoRecipesFoundFragment()
             }
         })
+    }
+
+    private fun showNoRecipesFoundFragment() {
+        val fragmentManager = requireActivity().supportFragmentManager
+        val noRecipesFoundFragment = NoRecipesFoundFragment()
+        fragmentManager.beginTransaction()
+            .replace(R.id.frameLayout, noRecipesFoundFragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun showPermissionDeniedDialog(permission: String) {
@@ -226,5 +249,12 @@ class CameraFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+    private fun updateFindRecipesButtonVisibility() {
+        binding.buttonFindRecipes.visibility = if (binding.capturedImage.drawable != null) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
     }
 }

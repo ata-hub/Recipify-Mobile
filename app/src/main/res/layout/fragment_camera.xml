@@ -1,48 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Fragments.CameraFragment">
+
+    <!-- Back button positioned at top left corner -->
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_arrow_back_24"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="16dp"/>
+
+    <!-- Image captured preview -->
     <ImageView
+        android:id="@+id/capturedImage"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:id="@+id/capturedImage"
-        android:src="@drawable/baseline_photo_camera_24"
-        />
+        android:layout_below="@id/backButton"
+        android:src="@drawable/baseline_photo_camera_24"/>
+
+    <!-- Buttons and Progress bar below the image -->
     <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="400px"
+        android:layout_below="@id/capturedImage"
         android:gravity="center">
 
         <Button
             android:id="@+id/buttonOpenCamera"
             android:layout_width="400px"
             android:layout_height="wrap_content"
-            android:text="Open Camera" />
+            android:text="Open Camera"
+            android:backgroundTint="@color/green"
+            />
 
         <Button
             android:id="@+id/buttonOpenGallery"
             android:layout_width="400px"
             android:layout_height="wrap_content"
-            android:text="Open Gallery" />
+            android:text="Open Gallery"
+            android:backgroundTint="@color/green"/>
+
         <Button
             android:id="@+id/buttonFindRecipes"
             android:layout_width="400px"
             android:layout_height="wrap_content"
-            android:text="Find Recipes" />
+            android:text="Find Recipes"
+            android:backgroundTint="@color/green"
+            android:visibility="gone"/>
+
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:visibility="gone"/>
-
-
     </LinearLayout>
-
-
-</FrameLayout>
+</RelativeLayout>

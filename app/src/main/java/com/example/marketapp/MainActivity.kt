@@ -3,6 +3,7 @@ package com.example.marketapp
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -72,12 +73,24 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+        // Set the default selected item to Home
+        binding.bottomNav.selectedItemId = R.id.home
 
     }
-    private fun replaceFragment(fragment : Fragment){
+    private fun replaceFragment(fragment: Fragment) {
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.frameLayout,fragment)
+        fragmentTransaction.replace(R.id.frameLayout, fragment)
         fragmentTransaction.commit()
+
+        // Adjust FrameLayout layout parameters based on the fragment
+        val layoutParams = binding.frameLayout.layoutParams as RelativeLayout.LayoutParams
+        if (fragment is HomeFragment) {
+            layoutParams.addRule(RelativeLayout.ABOVE, binding.bottomNav.id)
+        } else {
+            layoutParams.height = RelativeLayout.LayoutParams.MATCH_PARENT
+            layoutParams.removeRule(RelativeLayout.ABOVE)
+        }
+        binding.frameLayout.layoutParams = layoutParams
     }
 }
