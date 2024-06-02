@@ -24,7 +24,6 @@ class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         private const val COLUMN_CATEGORY = "category"
         // Add more columns as needed
     }
-
     override fun onCreate(db: SQLiteDatabase) {
         val CREATE_RECIPE_TABLE = ("CREATE TABLE $TABLE_NAME (" +
                 "$COLUMN_ID INTEGER PRIMARY KEY," +
@@ -46,7 +45,6 @@ class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_CATEGORY TEXT")
         }
     }
-
     fun insertRecipe(recipe: Recipe): Long {
         val db = this.writableDatabase
         val values = ContentValues().apply {

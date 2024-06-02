@@ -8,7 +8,7 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface RecipeService {
-    @GET("/api/recipes")
+    @GET("/api/recipes/listWithIngredients")
     fun getAllRecipes(): Call<List<Recipe>>
 
     @POST("/api/recipes/byIngredients")

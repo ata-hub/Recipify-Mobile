@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -11,9 +12,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.marketapp.Fragments.LoadingDialogFragment
 import com.example.marketapp.Fragments.RecipeResultFragment
 import com.example.marketapp.Interfaces.BackendService
 import com.example.marketapp.Models.Recipe
@@ -28,10 +30,10 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 
 class CameraFragment : Fragment() {
 
-    private val CAMERA_REQUEST_CODE = 101
     private val ARG_IMAGE_ID = "imageId"
     private lateinit var binding: FragmentCameraBinding
     private val retrofit = Retrofit.Builder()
@@ -44,25 +46,56 @@ class CameraFragment : Fragment() {
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                // TODO: Handle the captured photo
-                // You can retrieve the photo from result.data?.extras?.get("data") as Bitmap
                 val imageBitmap = result.data?.extras?.get("data") as Bitmap
                 binding.capturedImage.setImageBitmap(imageBitmap)
-                val category = arguments?.getString("category")
-                // Send the photo to your backend along with any additional information
-                if (category != null) {
-                    sendImageToBackend(category)
-                }
-
-
             }
         }
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageUri = result.data?.data
+                if (imageUri != null) {
+                    try {
+                        val imageBitmap = MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, imageUri)
+                        binding.capturedImage.setImageBitmap(imageBitmap)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                } else {
+                    Log.e("CameraFragment", "Image URI is null")
+                }
+            } else {
+                Log.e("CameraFragment", "Failed to pick image from gallery")
+            }
+        }
+
+    private val requestCameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                openCamera()
+            } else {
+                Log.i("CameraFragment", "Camera permission denied")
+                showPermissionDeniedDialog("camera")
+            }
+        }
+
+    private val requestStoragePermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                openGallery()
+            } else {
+                Log.i("CameraFragment", "Storage permission denied")
+                openGallery()
+            }
+        }
+
+    private var loadingDialog: LoadingDialogFragment? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val imageId = arguments?.getInt(ARG_IMAGE_ID, -1) ?: -1
         binding = FragmentCameraBinding.inflate(inflater, container, false)
         return binding.root
@@ -70,62 +103,92 @@ class CameraFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val category = arguments?.getString("category")
-        // Check and request camera permissions if needed
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                arrayOf(Manifest.permission.CAMERA),
-                CAMERA_REQUEST_CODE
-            )
-        } else {
-            openCamera(category)
+
+        binding.buttonOpenCamera.setOnClickListener {
+            checkCameraPermissionAndOpenCamera()
+        }
+
+        binding.buttonOpenGallery.setOnClickListener {
+            checkStoragePermissionAndOpenGallery()
+        }
+
+        binding.buttonFindRecipes.setOnClickListener {
+            val category = arguments?.getString("category")
+            if (category != null) {
+                sendImageToBackend(category)
+            }
         }
     }
 
-    private fun openCamera(category: String?) {
+    private fun checkCameraPermissionAndOpenCamera() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        } else {
+            openCamera()
+        }
+    }
+
+    private fun checkStoragePermissionAndOpenGallery() {
+        val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        if (ContextCompat.checkSelfPermission(requireContext(), storagePermission) != PackageManager.PERMISSION_GRANTED) {
+            requestStoragePermissionLauncher.launch(storagePermission)
+        } else {
+            openGallery()
+        }
+    }
+
+    private fun openCamera() {
         val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         takePictureLauncher.launch(cameraIntent)
-        category?.let { sendImageToBackend(it) }
     }
+
+    private fun openGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        pickImageLauncher.launch(galleryIntent)
+    }
+
     private fun sendImageToBackend(category: String) {
-        // Retrieve the captured image from the ImageView
-        val imageBitmap = (binding.capturedImage.drawable as BitmapDrawable).bitmap
-        Log.i("backend", "category sent is:$category")
-        // Convert the Bitmap to a byte array
+        Log.i("backend", "Backend call started...")
+        val imageDrawable = binding.capturedImage.drawable as? BitmapDrawable
+        if (imageDrawable == null) {
+            Log.e("backend", "No image to send")
+            return
+        }
+
+        // Show the loading dialog
+        loadingDialog = LoadingDialogFragment()
+        loadingDialog?.isCancelable = false
+        loadingDialog?.show(parentFragmentManager, "loadingDialog")
+
+        val imageBitmap = imageDrawable.bitmap
         val outputStream = ByteArrayOutputStream()
         imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
         val imageByteArray = outputStream.toByteArray()
 
-        // Create a RequestBody from the byte array
         val requestFile = imageByteArray.toRequestBody("image/jpeg".toMediaType())
         val imageBody = MultipartBody.Part.createFormData("image", "image.jpg", requestFile)
-
-        // Convert the category to RequestBody
         val categoryRequestBody = category.toRequestBody("text/plain".toMediaType())
 
-        // Call your backend API to upload the image along with the category
         val call = backendService.uploadImage(imageBody, categoryRequestBody)
-
-        // Enqueue the call to execute it asynchronously
         call.enqueue(object : retrofit2.Callback<List<Recipe>> {
             override fun onResponse(call: Call<List<Recipe>>, response: Response<List<Recipe>>) {
-                // Handle the backend response
+                // Hide the loading dialog
+                loadingDialog?.dismiss()
+
                 if (response.isSuccessful) {
-                    Log.i("backend","Image sent successfully")
-                    //buraya yeni sayfa oluştur, dönen recipeleri gösterecek bir fragment daha
+                    Log.i("backend", "Backend call successful")
                     val recipesFromBackend = response.body()
-                    // Navigate to RecipeListFragment and pass the recipes
-                    val fragmentManager = requireActivity().supportFragmentManager
-                    val recipeListFragment = recipesFromBackend?.let {
-                        RecipeResultFragment.newInstance(
-                            it
-                        )
+                    Log.i("backend", "Response body: $recipesFromBackend")
+                    recipesFromBackend?.forEach { recipe ->
+                        Log.i("backend", "Recipe: ${recipe.toString()}")
                     }
+                    val fragmentManager = requireActivity().supportFragmentManager
+                    val recipeListFragment = recipesFromBackend?.let { RecipeResultFragment.newInstance(it) }
                     if (recipeListFragment != null) {
                         fragmentManager.beginTransaction()
                             .replace(R.id.frameLayout, recipeListFragment)
@@ -133,15 +196,35 @@ class CameraFragment : Fragment() {
                             .commit()
                     }
                 } else {
-                    Log.i("backend","backend failed")
-                    Log.i("backend",response.message())
-                    Log.i("backend", response.code().toString())
+                    Log.e("backend", "Backend call failed with response code: ${response.code()} and message: ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<List<Recipe>>, t: Throwable) {
-                t.message?.let { Log.i("backend", it) }
+                // Hide the loading dialog
+                loadingDialog?.dismiss()
+
+                Log.e("backend", "Backend call failed: ${t.message}")
             }
         })
+    }
+
+    private fun showPermissionDeniedDialog(permission: String) {
+        val message = when (permission) {
+            "camera" -> "Camera permission is needed to take pictures. Please enable it in the app settings."
+            "storage" -> "Storage permission is needed to pick images from the gallery. Please enable it in the app settings."
+            else -> "Permission is needed. Please enable it in the app settings."
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Permission Denied")
+            .setMessage(message)
+            .setPositiveButton("Settings") { _, _ ->
+                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = android.net.Uri.fromParts("package", requireContext().packageName, null)
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }

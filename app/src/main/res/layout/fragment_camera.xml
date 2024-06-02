@@ -4,17 +4,45 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Fragments.CameraFragment">
-    <RelativeLayout
+    <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:id="@+id/capturedImage"
-            android:src="@drawable/ingredients_1"
-            />
+        android:layout_height="300dp"
+        android:id="@+id/capturedImage"
+        android:src="@drawable/baseline_photo_camera_24"
+        />
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="400px"
+        android:gravity="center">
 
-    </RelativeLayout>
+        <Button
+            android:id="@+id/buttonOpenCamera"
+            android:layout_width="400px"
+            android:layout_height="wrap_content"
+            android:text="Open Camera" />
+
+        <Button
+            android:id="@+id/buttonOpenGallery"
+            android:layout_width="400px"
+            android:layout_height="wrap_content"
+            android:text="Open Gallery" />
+        <Button
+            android:id="@+id/buttonFindRecipes"
+            android:layout_width="400px"
+            android:layout_height="wrap_content"
+            android:text="Find Recipes" />
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone"/>
+
+
+    </LinearLayout>
 
 
 </FrameLayout>

@@ -40,12 +40,12 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
-        binding.general.setOnClickListener { onCardClick(it.id, "genel") }
-        binding.deserts.setOnClickListener { onCardClick(it.id, "tatlı") }
-        binding.salads.setOnClickListener { onCardClick(it.id, "salata") }
-        binding.drinks.setOnClickListener { onCardClick(it.id, "içecek") }
-        binding.meals.setOnClickListener { onCardClick(it.id, "öğün") }
-        binding.soups.setOnClickListener { onCardClick(it.id, "çorba") }
+        binding.general.setOnClickListener { onCardClick(it.id, "") }
+        binding.deserts.setOnClickListener { onCardClick(it.id, "Tatli") }
+        binding.salads.setOnClickListener { onCardClick(it.id, "Salata") }
+        binding.drinks.setOnClickListener { onCardClick(it.id, "Icecek") }
+        binding.meals.setOnClickListener { onCardClick(it.id, "Ogun") }
+        binding.soups.setOnClickListener { onCardClick(it.id, "Corba") }
         return binding.root
     }
 
