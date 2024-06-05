@@ -11,7 +11,7 @@ import com.example.marketapp.Models.Recipe
 class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
-        private const val DATABASE_VERSION = 5
+        private const val DATABASE_VERSION = 8 // Incremented version for new change
         private const val DATABASE_NAME = "RecipeDatabase.db"
 
         // Define table and column names
@@ -22,17 +22,20 @@ class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         private const val COLUMN_DESCRIPTION = "description"
         private const val COLUMN_IMAGE = "image"
         private const val COLUMN_CATEGORY = "category"
-        // Add more columns as needed
+        private const val COLUMN_INGREDIENTS = "ingredients"
+        private const val COLUMN_INSTRUCTIONS = "instructions" // Added column for instructions
     }
+
     override fun onCreate(db: SQLiteDatabase) {
         val CREATE_RECIPE_TABLE = ("CREATE TABLE $TABLE_NAME (" +
                 "$COLUMN_ID INTEGER PRIMARY KEY," +
                 "$COLUMN_NAME TEXT," +
                 "$COLUMN_TOTAL_TIME INTEGER," +
                 "$COLUMN_DESCRIPTION TEXT," +
-                "$COLUMN_IMAGE TEXT" +
-                "$COLUMN_CATEGORY TEXT" +
-                // Define more columns here
+                "$COLUMN_IMAGE TEXT," +
+                "$COLUMN_CATEGORY TEXT," +
+                "$COLUMN_INGREDIENTS TEXT," +
+                "$COLUMN_INSTRUCTIONS TEXT" + // Define column for instructions
                 ")")
         db.execSQL(CREATE_RECIPE_TABLE)
     }
@@ -41,10 +44,9 @@ class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
         onCreate(db)
         Log.i("sqlite", "db upgraded to version:$newVersion")
-        if(newVersion == 5){
-            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_CATEGORY TEXT")
-        }
+
     }
+
     fun insertRecipe(recipe: Recipe): Long {
         val db = this.writableDatabase
         val values = ContentValues().apply {
@@ -53,12 +55,15 @@ class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put(COLUMN_DESCRIPTION, recipe.description)
             put(COLUMN_IMAGE, recipe.image)
             put(COLUMN_CATEGORY, recipe.category)
-            Log.i("sqlite","adding recipe"+recipe.name)
+            put(COLUMN_INGREDIENTS, recipe.recipeIngredients?.joinToString("\n")) // Join with \n
+            put(COLUMN_INSTRUCTIONS, recipe.instructions) // Store instructions
+            Log.i("sqlite", "adding recipe" + recipe.name)
         }
         val id = db.insert(TABLE_NAME, null, values)
         db.close()
         return id
     }
+
     fun deleteRecipe(recipeId: Long): Int {
         val db = this.writableDatabase
         val deletedRows = db.delete(TABLE_NAME, "$COLUMN_ID = ?", arrayOf(recipeId.toString()))
@@ -78,9 +83,12 @@ class RecipeDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 val description = cursor.getString(cursor.getColumnIndex(COLUMN_DESCRIPTION))
                 val image = cursor.getString(cursor.getColumnIndex(COLUMN_IMAGE))
                 val category = cursor.getString(cursor.getColumnIndex(COLUMN_CATEGORY))
-                // Get more values for other columns
-                //TODO son nullu category ile değiştir
-                val recipe = Recipe(id, name, totalTime, description, image, null, null, null, category)
+                val ingredientsString = cursor.getString(cursor.getColumnIndex(COLUMN_INGREDIENTS))
+                val recipeIngredients = ingredientsString?.split("\n") // Split by \n
+                val instructions = cursor.getString(cursor.getColumnIndex(COLUMN_INSTRUCTIONS))
+
+                // Create Recipe object
+                val recipe = Recipe(id, name, totalTime, description, image, null, recipeIngredients, instructions, category)
                 recipeList.add(recipe)
             }
         }

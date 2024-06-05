@@ -4,26 +4,55 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
-<RelativeLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
 
-    <!-- RecyclerView to display the list of recipes -->
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="All Recipes"
-        android:textStyle="bold"
-        android:textSize="25sp"
-        android:textColor="@color/black"
-        android:id="@+id/allRecipesTitle"/>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recipeRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/allRecipesTitle"
-        android:layout_marginTop="10dp"/>
+        android:layout_height="match_parent">
 
-</RelativeLayout>
+        <!-- Title -->
+        <TextView
+            android:id="@+id/allRecipesTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="All Recipes"
+            android:textStyle="bold"
+            android:textSize="25sp"
+            android:textColor="@color/black" />
+
+        <!-- Search and Filter Layout -->
+        <LinearLayout
+            android:id="@+id/searchFilterLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/allRecipesTitle"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <!-- Search Field -->
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/recipeSearchView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.7"
+                android:queryHint="Search recipes..." />
+
+            <!-- Dropdown Menu -->
+            <Spinner
+                android:id="@+id/categorySpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.3"
+                android:entries="@array/category_array" />
+        </LinearLayout>
+
+        <!-- RecyclerView to display the list of recipes -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recipeRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/searchFilterLayout"
+            android:layout_marginTop="10dp" />
+    </RelativeLayout>
 </ScrollView>

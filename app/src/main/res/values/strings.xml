@@ -3,4 +3,13 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="total_time">Total Time: %d minutes</string>
+    <!-- Other strings -->
+    <string-array name="category_array">
+        <item>Hepsi</item>
+        <item>Öğün</item>
+        <item>Salata</item>
+        <item>Çorba</item>
+        <item>Tatlı</item>
+        <item>İçecek</item>
+    </string-array>
 </resources>

@@ -52,7 +52,11 @@ class RecipeResultFragment : Fragment() {
             recyclerView.adapter = adapter
         }
 
+        // Set OnClickListener to the back button
+        view.findViewById<View>(R.id.backButton).setOnClickListener {
+            requireActivity().supportFragmentManager.popBackStack()
+        }
+
         return view
     }
 }
-

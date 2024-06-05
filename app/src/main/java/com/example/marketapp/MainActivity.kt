@@ -5,11 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.RelativeLayout
 import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
-import androidx.viewpager.widget.ViewPager
-import com.example.marketapp.Adapters.ViewPagerAdapter
 import com.example.marketapp.Fragments.AllRecipesFragment
 import com.example.marketapp.Fragments.HomeFragment
 import com.example.marketapp.Fragments.MyRecipesFragment
@@ -22,18 +18,28 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    val ipaddress: String = "192.168.137.1"
+    private val ipaddress: String = "192.168.137.1"
+    private var currentFragment: Fragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        val view = binding.root
-        //this 2 line is for login screen animation
-        setContentView(view)
-        replaceFragment(HomeFragment())
+        setContentView(binding.root)
+
+        // Initialize bottom navigation
+        binding.bottomNav.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.home -> replaceFragment(HomeFragment())
+                R.id.my_recipes -> replaceFragment(MyRecipesFragment())
+                R.id.all_recipes -> replaceFragment(AllRecipesFragment())
+            }
+            true
+        }
+
+        // Set the default selected item to Home
+        binding.bottomNav.selectedItemId = R.id.home
 
         // Create Retrofit instance
         val retrofit = Retrofit.Builder()
@@ -48,13 +54,11 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<List<Recipe>>, response: Response<List<Recipe>>) {
                 if (response.isSuccessful) {
                     val recipes = response.body()
-                    Toast.makeText(this@MainActivity,"Succssful Connection",Toast.LENGTH_LONG).show()
-
+                    Toast.makeText(this@MainActivity, "Successful Connection", Toast.LENGTH_LONG).show()
                     // Handle the list of recipes
                 } else {
                     // Handle unsuccessful response
-                    Toast.makeText(this@MainActivity,"Failed Connection",Toast.LENGTH_LONG).show()
-
+                    Toast.makeText(this@MainActivity, "Failed Connection", Toast.LENGTH_LONG).show()
                 }
             }
 
@@ -63,29 +67,29 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        //this part handles navigation between fragments
-        binding.bottomNav.setOnItemSelectedListener {
-            when(it.itemId){
-                R.id.home ->replaceFragment(HomeFragment())
-                R.id.my_recipes ->replaceFragment(MyRecipesFragment())
-                R.id.all_recipes ->replaceFragment(AllRecipesFragment())
-                else ->{}
-            }
-            true
+        // Handle initial fragment display
+        if (savedInstanceState == null) {
+            replaceFragment(HomeFragment())
         }
-        // Set the default selected item to Home
-        binding.bottomNav.selectedItemId = R.id.home
 
+        // Handle fragment changes in the back stack
+        supportFragmentManager.addOnBackStackChangedListener {
+            val fragment = supportFragmentManager.findFragmentById(R.id.frameLayout)
+            currentFragment = fragment
+            adjustLayoutParameters()
+        }
     }
-    private fun replaceFragment(fragment: Fragment) {
-        val fragmentManager = supportFragmentManager
-        val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.frameLayout, fragment)
-        fragmentTransaction.commit()
 
-        // Adjust FrameLayout layout parameters based on the fragment
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.frameLayout, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun adjustLayoutParameters() {
         val layoutParams = binding.frameLayout.layoutParams as RelativeLayout.LayoutParams
-        if (fragment is HomeFragment) {
+        if (currentFragment is HomeFragment) {
             layoutParams.addRule(RelativeLayout.ABOVE, binding.bottomNav.id)
         } else {
             layoutParams.height = RelativeLayout.LayoutParams.MATCH_PARENT

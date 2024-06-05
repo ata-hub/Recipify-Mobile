@@ -16,7 +16,7 @@ import com.example.marketapp.Helpers.RecipeDBHelper
 import com.example.marketapp.Models.Recipe
 import com.example.marketapp.R
 
-class RecipeAdapter(private val recipes: MutableList<Recipe>, private val context: Context,  private val actionType: ActionType) :
+class RecipeAdapter(private var recipes: MutableList<Recipe>, private val context: Context, private val actionType: ActionType) :
     RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder>() {
     private val dbHelper = RecipeDBHelper(context)
 
@@ -33,6 +33,10 @@ class RecipeAdapter(private val recipes: MutableList<Recipe>, private val contex
 
     override fun getItemCount(): Int {
         return recipes.size
+    }
+    fun updateRecipes(newRecipes: MutableList<Recipe>) {
+        recipes = newRecipes
+        notifyDataSetChanged()
     }
 
     inner class RecipeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
